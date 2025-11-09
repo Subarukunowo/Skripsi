@@ -1,7 +1,12 @@
 <?php
-
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\FormasiController;
 
 Route::get('/', function () {
-    return view('welcome');
+    return view('beranda');
 });
+
+// route untuk upload dan klasifikasi
+Route::post('/api/classify', [FormasiController::class, 'classify']);
+Route::post('/analyze', [FormasiController::class, 'analyze'])->name('formation.analyze');
+Route::get('/formation', fn() => view('formation')); // halaman utama

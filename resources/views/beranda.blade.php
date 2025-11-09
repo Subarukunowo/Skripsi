@@ -2,6 +2,7 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Klasifikasi Formasi Sepak Bola</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -14,7 +15,6 @@
       --light: #f8fafc;
       --accent: #f59e0b;
     }
-    
     * {
       margin: 0;
       padding: 0;
@@ -224,27 +224,25 @@
       overflow: hidden;
     }
     
-    .formation-field::before {
-      content: "";
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 80%;
-      height: 80%;
-      border: 2px solid rgba(255, 255, 255, 0.3);
-      border-radius: 5px;
-    }
-    
+    .formation-field::before,
     .formation-field::after {
       content: "";
       position: absolute;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 5px;
+    }
+    
+    .formation-field::before {
+      width: 80%;
+      height: 80%;
+    }
+    
+    .formation-field::after {
       width: 20px;
       height: 20px;
-      border: 2px solid rgba(255, 255, 255, 0.3);
       border-radius: 50%;
     }
     
@@ -299,6 +297,13 @@
         transform: rotate(360deg);
       }
     }
+
+    .error {
+      color: #ef4444;
+      text-align: center;
+      margin-top: 10px;
+      font-size: 14px;
+    }
   </style>
 </head>
 <body>
@@ -319,6 +324,7 @@
       </div>
       
       <div class="file-name" id="fileName"></div>
+      <div class="error" id="error"></div>
       
       <button id="processBtn" class="process-btn" disabled>Analisis & Klasifikasi</button>
       
@@ -336,7 +342,7 @@
         </div>
         
         <div class="formations" id="formations">
-          <!-- Formation cards will be inserted here -->
+          <!-- Hasil dari Laravel akan dimasukkan di sini -->
         </div>
       </div>
     </div>
@@ -347,7 +353,6 @@
   </div>
 
   <script>
-    const formasiList = ["4-3-3", "3-5-2", "3-4-3", "4-2-3-1", "5-4-1", "4-4-2", "4-5-1", "3-2-4-1", "5-3-2"];
     const fileInput = document.getElementById('fileInput');
     const fileName = document.getElementById('fileName');
     const processBtn = document.getElementById('processBtn');
@@ -355,40 +360,28 @@
     const outputContainer = document.getElementById('outputContainer');
     const formationsContainer = document.getElementById('formations');
     const dropArea = document.getElementById('dropArea');
+    const errorDiv = document.getElementById('error');
 
-    // Handle file selection
-    fileInput.addEventListener('change', function(event) {
-      const file = event.target.files[0];
-      if (file) {
-        fileName.textContent = file.name;
-        fileName.style.display = 'block';
-        processBtn.disabled = false;
-      } else {
-        fileName.style.display = 'none';
-        processBtn.disabled = true;
-      }
-    });
-
-    // Handle drag and drop
+    // Drag & drop
     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-      dropArea.addEventListener(eventName, preventDefaults, false);
+      dropArea.addEventListener(eventName, e => {
+        e.preventDefault();
+        e.stopPropagation();
+      });
     });
 
-    function preventDefaults(e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-
-    ['dragenter', 'dragover'].forEach(eventName => {
-      dropArea.addEventListener(eventName, highlight, false);
+    ['dragenter', 'dragover'].forEach(() => {
+      dropArea.addEventListener('dragenter', highlight);
+      dropArea.addEventListener('dragover', highlight);
     });
 
-    ['dragleave', 'drop'].forEach(eventName => {
-      dropArea.addEventListener(eventName, unhighlight, false);
+    ['dragleave', 'drop'].forEach(() => {
+      dropArea.addEventListener('dragleave', unhighlight);
+      dropArea.addEventListener('drop', handleDrop);
     });
 
     function highlight() {
-      dropArea.style.borderColor = (--primary);
+      dropArea.style.borderColor = '#0ea5e9';
       dropArea.style.backgroundColor = 'rgba(14, 165, 233, 0.1)';
     }
 
@@ -397,110 +390,108 @@
       dropArea.style.backgroundColor = '';
     }
 
-    dropArea.addEventListener('drop', handleDrop, false);
-
     function handleDrop(e) {
       const dt = e.dataTransfer;
       const file = dt.files[0];
-      fileInput.files = dt.files;
-      
+      if (file && (file.name.endsWith('.csv') || file.name.endsWith('.xlsx'))) {
+        fileInput.files = dt.files;
+        updateUI(file);
+      }
+    }
+
+    fileInput.addEventListener('change', (e) => {
+      updateUI(e.target.files[0]);
+    });
+
+    function updateUI(file) {
       if (file) {
         fileName.textContent = file.name;
         fileName.style.display = 'block';
         processBtn.disabled = false;
+        errorDiv.textContent = '';
+      } else {
+        fileName.style.display = 'none';
+        processBtn.disabled = true;
       }
     }
 
-    // Process button click
-    processBtn.addEventListener('click', function() {
+    // Proses via AJAX ke Laravel
+    processBtn.addEventListener('click', () => {
       const file = fileInput.files[0];
       if (!file) {
-        alert("Silakan pilih file CSV atau XLSX terlebih dahulu.");
+        errorDiv.textContent = 'Pilih file terlebih dahulu.';
         return;
       }
 
-      // Show loading
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
+
+      errorDiv.textContent = '';
       loading.style.display = 'block';
       outputContainer.style.display = 'none';
-      
-      // Simulate processing time
-      setTimeout(() => {
-        processFile(file);
-      }, 1500);
+
+      fetch("{{ route('formation.analyze') }}", {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          renderResults(data.recommendations);
+          outputContainer.style.display = 'block';
+        } else {
+          errorDiv.textContent = '❌ ' + data.message;
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        errorDiv.textContent = '❌ Terjadi kesalahan saat memproses file.';
+      })
+      .finally(() => {
+        loading.style.display = 'none';
+      });
     });
 
-    function acakFormasi(n = 3) {
-      const shuffled = [...formasiList].sort(() => 0.5 - Math.random());
-      return shuffled.slice(0, n);
-    }
-
-    function processFile(file) {
-      const reader = new FileReader();
-      
-      reader.onload = () => {
-        // Get recommended formations
-        const recommendedFormations = acakFormasi(3);
-        
-        // Create formation cards
-        formationsContainer.innerHTML = '';
-        
-        recommendedFormations.forEach((formation, index) => {
-          const card = document.createElement('div');
-          card.className = 'formation-card';
-          
-          const rank = index + 1;
-          let rankText = 'Rekomendasi #' + rank;
-          
-          card.innerHTML = `
-            <div class="formation-number">${formation}</div>
-            <div class="formation-rank">${rankText}</div>
-            <div class="formation-field" id="field-${index}"></div>
-          `;
-          
-          formationsContainer.appendChild(card);
-          
-          // Add players to the field visualization
-          setTimeout(() => {
-            visualizeFormation(formation, `field-${index}`);
-          }, 100);
-        });
-        
-        // Hide loading and show results
-        loading.style.display = 'none';
-        outputContainer.style.display = 'block';
-      };
-
-      reader.readAsArrayBuffer(file);
+    function renderResults(results) {
+      formationsContainer.innerHTML = '';
+      results.forEach((item, i) => {
+        const card = document.createElement('div');
+        card.className = 'formation-card';
+        card.innerHTML = `
+          <div class="formation-number">${item.formasi}</div>
+          <div class="formation-rank">Rekomendasi #${i + 1}</div>
+          <div class="formation-field" id="field-${i}"></div>
+        `;
+        formationsContainer.appendChild(card);
+        setTimeout(() => visualizeFormation(item.formasi, `field-${i}`), 50);
+      });
     }
 
     function visualizeFormation(formation, fieldId) {
       const field = document.getElementById(fieldId);
+      if (!field) return;
+
       const parts = formation.split('-').map(Number);
-      
-      // Add goalkeeper
-      addPlayer(field, 50, 90);
-      
-      // Add other players based on formation
+      addPlayer(field, 50, 90); // GK
+
       const totalLines = parts.length;
-      
-      parts.forEach((playersInLine, lineIndex) => {
-        const yPosition = 75 - (lineIndex + 1) * (60 / (totalLines + 1));
-        
-        for (let i = 0; i < playersInLine; i++) {
-          const xSpacing = 80 / (playersInLine + 1);
-          const xPosition = 10 + (i + 1) * xSpacing;
-          addPlayer(field, xPosition, yPosition);
+      parts.forEach((count, lineIdx) => {
+        const y = 75 - (lineIdx + 1) * (60 / (totalLines + 1));
+        for (let i = 0; i < count; i++) {
+          const x = 10 + (i + 1) * (80 / (count + 1));
+          addPlayer(field, x, y);
         }
       });
     }
 
-    function addPlayer(field, xPercent, yPercent) {
-      const player = document.createElement('div');
-      player.className = 'player';
-      player.style.left = `${xPercent}%`;
-      player.style.top = `${yPercent}%`;
-      field.appendChild(player);
+    function addPlayer(field, x, y) {
+      const p = document.createElement('div');
+      p.className = 'player';
+      p.style.left = `${x}%`;
+      p.style.top = `${y}%`;
+      field.appendChild(p);
     }
   </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9696e8f5e4bf5ffe',t:'MTc1NDIzNTU5MC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</body>
 </html>
