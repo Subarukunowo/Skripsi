@@ -304,6 +304,12 @@
       margin-top: 10px;
       font-size: 14px;
     }
+
+    .download-section {
+      display: none;
+      text-align: center;
+      margin-top: 20px;
+    }
   </style>
 </head>
 <body>
@@ -345,6 +351,12 @@
           <!-- Hasil dari Laravel akan dimasukkan di sini -->
         </div>
       </div>
+
+      <div class="download-section" id="downloadSection">
+        <button id="downloadPDFBtn" class="process-btn" style="background: linear-gradient(135deg, #8b5cf6, #ec4899);">
+          Unduh Laporan PDF
+        </button>
+      </div>
     </div>
     
     <div class="footer">
@@ -361,6 +373,8 @@
     const formationsContainer = document.getElementById('formations');
     const dropArea = document.getElementById('dropArea');
     const errorDiv = document.getElementById('error');
+    const downloadSection = document.getElementById('downloadSection');
+    const downloadPDFBtn = document.getElementById('downloadPDFBtn');
 
     // Drag & drop
     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
@@ -430,6 +444,7 @@
       errorDiv.textContent = '';
       loading.style.display = 'block';
       outputContainer.style.display = 'none';
+      downloadSection.style.display = 'none';
 
       fetch("{{ route('formation.analyze') }}", {
         method: 'POST',
@@ -440,6 +455,7 @@
         if (data.success) {
           renderResults(data.recommendations);
           outputContainer.style.display = 'block';
+          downloadSection.style.display = 'block';
         } else {
           errorDiv.textContent = '❌ ' + data.message;
         }
@@ -492,6 +508,35 @@
       p.style.top = `${y}%`;
       field.appendChild(p);
     }
+
+    downloadPDFBtn.addEventListener('click', () => {
+      fetch("{{ route('formation.download.pdf') }}", {
+        method: 'POST',
+        headers: {
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
+        body: JSON.stringify({}),
+      })
+      .then(response => {
+        if (response.ok) {
+          return response.blob();
+        }
+        throw new Error('Gagal mengunduh PDF.');
+      })
+      .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'laporan-formasi-sepak-bola.pdf';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      })
+      .catch(err => {
+        console.error(err);
+        alert('Terjadi kesalahan saat mengunduh PDF.');
+      });
+    });
   </script>
 </body>
 </html>

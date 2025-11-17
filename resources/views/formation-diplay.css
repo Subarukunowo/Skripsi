@@ -1,0 +1,160 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    background-color: #1a1a1a;
+    color: #ffffff;
+    line-height: 1.6;
+    padding: 20px;
+}
+
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.header {
+    text-align: center;
+    margin-bottom: 40px;
+    padding: 20px;
+}
+
+.header h1 {
+    font-size: 36px;
+    color: #06b6d4;
+    margin-bottom: 10px;
+}
+
+.subtitle {
+    font-size: 18px;
+    color: #9ca3af;
+}
+
+.formations-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 30px;
+    margin-bottom: 40px;
+}
+
+.formation-card {
+    background-color: #374151;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.formation-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 12px rgba(0, 0, 0, 0.4);
+}
+
+.formation-header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.formation-name {
+    font-size: 32px;
+    color: #06b6d4;
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+
+.recommendation-badge {
+    display: inline-block;
+    background-color: #f97316;
+    color: #ffffff;
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.badge-secondary {
+    background-color: #fb923c;
+}
+
+.badge-tertiary {
+    background-color: #fdba74;
+}
+
+.field {
+    position: relative;
+    width: 100%;
+    padding-top: 133.33%;
+    background-color: #10b981;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.player {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    background-color: #000000;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.formation-description {
+    background-color: #1f2937;
+    padding: 15px;
+    border-radius: 8px;
+    border-left: 4px solid #06b6d4;
+}
+
+.formation-description h3 {
+    color: #10b981;
+    font-size: 18px;
+    margin-bottom: 10px;
+}
+
+.formation-description p {
+    color: #d1d5db;
+    font-size: 14px;
+    line-height: 1.7;
+}
+
+.footer {
+    text-align: center;
+    padding: 20px;
+    margin-top: 40px;
+    border-top: 2px solid #374151;
+    color: #9ca3af;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .formations-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .header h1 {
+        font-size: 28px;
+    }
+    
+    .formation-name {
+        font-size: 28px;
+    }
+}
+
+/* Print styles for PDF */
+@media print {
+    body {
+        background-color: #ffffff;
+        color: #000000;
+    }
+    
+    .formation-card {
+        page-break-inside: avoid;
+        margin-bottom: 30px;
+    }
+}

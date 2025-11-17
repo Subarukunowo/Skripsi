@@ -10,3 +10,4 @@ Route::get('/', function () {
 Route::post('/api/classify', [FormasiController::class, 'classify']);
 Route::post('/analyze', [FormasiController::class, 'analyze'])->name('formation.analyze');
 Route::get('/formation', fn() => view('formation')); // halaman utama
+Route::post('/download-pdf', [FormasiController::class, 'downloadPDF'])->name('formation.download.pdf');
