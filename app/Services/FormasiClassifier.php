@@ -90,4 +90,12 @@ class FormasiClassifier
         // Ambil 3 teratas
         return array_slice($results, 0, 3);
     }
+
+    /**
+     * Ambil dataset referensi
+     */
+    public function getReferenceDataset()
+    {
+        return $this->referenceDataset;
+    }
 }

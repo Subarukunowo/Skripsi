@@ -53,6 +53,9 @@
         <button id="downloadPDFBtn" class="process-btn" style="background: linear-gradient(135deg, #8b5cf6, #ec4899);">
           Unduh Laporan PDF
         </button>
+        <button id="downloadExcelBtn" class="process-btn" style="background: linear-gradient(135deg, #10b981, #0ea5e9);">
+          Unduh Laporan Excel
+        </button>
       </div>
     </div>
     
@@ -232,6 +235,38 @@
       .catch(err => {
         console.error(err);
         alert('Terjadi kesalahan saat mengunduh PDF.');
+      });
+    });
+
+    // Tambahkan fungsi download Excel
+    const downloadExcelBtn = document.getElementById('downloadExcelBtn');
+
+    downloadExcelBtn.addEventListener('click', () => {
+      fetch("{{ route('formation.download.excel') }}", {
+        method: 'POST',
+        headers: {
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
+        body: JSON.stringify({}),
+      })
+      .then(response => {
+        if (response.ok) {
+          return response.blob();
+        }
+        throw new Error('Gagal mengunduh Excel.');
+      })
+      .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'laporan-formasi-sepak-bola.xlsx';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      })
+      .catch(err => {
+        console.error(err);
+        alert('Terjadi kesalahan saat mengunduh Excel.');
       });
     });
   </script>
