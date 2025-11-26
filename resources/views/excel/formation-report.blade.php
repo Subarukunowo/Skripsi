@@ -130,6 +130,7 @@
                         </div>
                         <p class="text-muted">Metode: Gaussian Naïve Bayes | Probabilitas: {{ number_format($recommendations[0]['prob'] * 100, 2) }}%</p>
 
+
                         <!-- Visualisasi Formasi (Diagram Sederhana) -->
                         <div class="mt-4">
                             <h6>Diagram Formasi: {{ $recommendedFormation }}</h6>
