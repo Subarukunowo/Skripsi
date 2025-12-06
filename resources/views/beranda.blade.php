@@ -10,8 +10,26 @@
   <link rel="stylesheet" href="{{ asset('css/beranda.css') }}">
 </head>
 <body>
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <h2>Klasifikasi Formasi Sepak Bola</h2>
+    </div>
+    <ul class="navbar-nav">
+      <li class="nav-item">
+        <a href="{{ url('/') }}" class="nav-link active">Beranda</a>
+      </li>
+      <li class="nav-item">
+        <a href="{{ url('/about') }}" class="nav-link">Tentang</a>
+      </li>
+      <li class="nav-item">
+        <a href="{{ url('/setting') }}" class="nav-link">Pengaturan</a>
+      </li>
+    </ul>
+  </nav>
+
   <div class="container">
-    <div class="header">
+    <div class="page-header">
       <h2>Klasifikasi Formasi Sepak Bola</h2>
       <p>Analisis tim Anda dan temukan formasi terbaik</p>
     </div>
@@ -75,6 +93,7 @@
     const errorDiv = document.getElementById('error');
     const downloadSection = document.getElementById('downloadSection');
     const downloadPDFBtn = document.getElementById('downloadPDFBtn');
+    const downloadExcelBtn = document.getElementById('downloadExcelBtn');
 
     // Drag & drop
     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
@@ -237,9 +256,6 @@
         alert('Terjadi kesalahan saat mengunduh PDF.');
       });
     });
-
-    // Tambahkan fungsi download Excel
-    const downloadExcelBtn = document.getElementById('downloadExcelBtn');
 
     downloadExcelBtn.addEventListener('click', () => {
       fetch("{{ route('formation.download.excel') }}", {

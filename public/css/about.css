@@ -23,8 +23,55 @@ body {
   justify-content: flex-start;
   padding: 20px;
   background-image: radial-gradient(circle at 10% 20%, rgba(14, 165, 233, 0.1) 0%, rgba(16, 185, 129, 0.1) 90%);
+  padding-top: 80px; /* Memberi ruang untuk navbar sticky */
 }
 
+/* Navbar */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 30px;
+  background-color: var(--primary);
+  color: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+}
+
+.navbar-brand h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.navbar-nav {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  gap: 20px;
+}
+
+.nav-link {
+  color: white;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 15px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+
+.nav-link:hover,
+.nav-link.active {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Container */
 .container {
   max-width: 800px;
   width: 100%;
@@ -32,27 +79,29 @@ body {
   border-radius: 16px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
   overflow: hidden;
-  margin-top: 30px;
+  margin-top: 20px;
 }
 
-.header {
+/* Header Halaman */
+.page-header {
   background-color: var(--primary);
   color: white;
   padding: 25px 30px;
   text-align: center;
 }
 
-.header h1 {
+.page-header h1 {
   font-size: 28px;
   font-weight: 700;
   margin-bottom: 5px;
 }
 
-.header p {
+.page-header p {
   font-size: 16px;
   opacity: 0.9;
 }
 
+/* Konten */
 .content {
   padding: 30px;
 }
@@ -101,6 +150,7 @@ body {
   font-size: 16px;
 }
 
+/* Footer */
 .footer {
   text-align: center;
   padding: 20px;

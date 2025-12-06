@@ -301,3 +301,62 @@ body {
   text-align: center;
   margin-top: 20px;
 }
+/* === Navbar === */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 30px;
+  background-color: var(--primary);
+  color: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+}
+
+.navbar-brand h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.navbar-nav {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  gap: 20px;
+}
+
+.nav-link {
+  color: white;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 15px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+
+.nav-link:hover,
+.nav-link.active {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Sesuaikan body agar tidak tertutup navbar */
+body {
+  padding-top: 80px; /* Sesuaikan dengan tinggi navbar */
+}
+
+/* Ganti .header jadi .page-header agar tidak bentrok */
+.page-header {
+  background-color: var(--primary);
+  color: white;
+  padding: 25px 30px;
+  text-align: center;
+  border-radius: 16px 16px 0 0;
+  margin-bottom: 0;
+}

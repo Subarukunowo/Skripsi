@@ -8,8 +8,26 @@
   <link rel="stylesheet" href="{{ asset('css/about.css') }}">
 </head>
 <body>
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <h2>Klasifikasi Formasi Sepak Bola</h2>
+    </div>
+    <ul class="navbar-nav">
+      <li class="nav-item">
+        <a href="{{ url('/') }}" class="nav-link">Beranda</a>
+      </li>
+      <li class="nav-item">
+        <a href="{{ url('/about') }}" class="nav-link active">Tentang</a>
+      </li>
+      <li class="nav-item">
+        <a href="{{ url('/setting') }}" class="nav-link">Pengaturan</a>
+      </li>
+    </ul>
+  </nav>
+
   <div class="container">
-    <div class="header">
+    <div class="page-header">
       <h1>Tentang Sistem Ini</h1>
       <p>Klasifikasi Formasi Sepak Bola Berbasis Statistik Tim</p>
     </div>
@@ -70,7 +88,7 @@
   </div>
 
   <div class="footer">
-
+    Dibuat dengan ❤️ untuk dunia sepak bola Indonesia
   </div>
 </body>
 </html>
