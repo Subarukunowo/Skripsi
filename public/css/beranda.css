@@ -1,9 +1,11 @@
 :root {
-  --primary: #0ea5e9;
-  --secondary: #10b981;
-  --dark: #1e293b;
+  /* SKEMA WARNA ASLI YANG DIPERTahankan */
+  --primary: #0ea5e9; /* Biru Terang */
+  --secondary: #10b981; /* Hijau Neon */
+  --dark: #1e293b; 
   --light: #f8fafc;
-  --accent: #f59e0b;
+  --accent: #f59e0b; 
+  --field-bg: #15803d; /* Warna Lapangan */
 }
 
 * {
@@ -14,41 +16,90 @@
 
 body {
   font-family: 'Poppins', sans-serif;
-  background-color: #e0f2fe;
+  background-color: #e0f2fe; /* Warna latar belakang dari primary */
   color: var(--dark);
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   padding: 20px;
+  /* Sesuaikan padding-top untuk Navbar */
+  padding-top: 80px; 
   background-image: radial-gradient(circle at 10% 20%, rgba(14, 165, 233, 0.1) 0%, rgba(16, 185, 129, 0.1) 90%);
 }
 
 .container {
-  max-width: 800px;
+  max-width: 1000px; /* Lebar diperlebar untuk tampilan Formasi yang lebih baik */
   width: 100%;
   background-color: white;
   border-radius: 16px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
   overflow: hidden;
+  margin-bottom: 20px;
 }
 
-.header {
-  background-color: var(--primary);
+/* === Navbar === */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 30px;
+  background-color: var(--primary); /* Menggunakan primary (Biru Terang) */
+  color: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+}
+
+.navbar-brand h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.navbar-nav {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  gap: 20px;
+}
+
+.nav-link {
+  color: white;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 15px;
+  padding: 8px 15px;
+  border-radius: 6px;
+  transition: background 0.3s;
+}
+
+.nav-link:hover,
+.nav-link.active {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Ganti .header jadi .page-header */
+.page-header {
+  background-color: var(--primary); /* Menggunakan primary (Biru Terang) */
   color: white;
   padding: 25px 30px;
   text-align: center;
-  position: relative;
+  border-radius: 16px 16px 0 0;
+  margin-bottom: 0;
 }
 
-.header h2 {
+.page-header h2 {
   font-size: 28px;
   font-weight: 700;
   margin-bottom: 5px;
 }
 
-.header p {
+.page-header p {
   font-size: 16px;
   opacity: 0.9;
 }
@@ -57,6 +108,7 @@ body {
   padding: 30px;
 }
 
+/* === File Upload (Tanpa Perubahan Warna) === */
 .file-upload {
   display: flex;
   flex-direction: column;
@@ -84,16 +136,6 @@ body {
   margin-bottom: 15px;
 }
 
-.file-upload p {
-  color: #64748b;
-  margin-bottom: 10px;
-}
-
-.file-upload span {
-  font-size: 14px;
-  color: #94a3b8;
-}
-
 .file-upload input {
   position: absolute;
   width: 100%;
@@ -116,6 +158,7 @@ body {
   text-align: center;
 }
 
+/* === Process Button (Tanpa Perubahan Warna) === */
 .process-btn {
   display: block;
   width: 100%;
@@ -143,42 +186,42 @@ body {
   box-shadow: none;
 }
 
+/* === Output & Formations Grid === */
 .output-container {
   display: none;
   margin-top: 20px;
 }
 
 .output-title {
-  font-size: 18px;
-  font-weight: 600;
-  margin-bottom: 15px;
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 20px;
   color: var(--dark);
   display: flex;
   align-items: center;
 }
 
 .output-title svg {
-  width: 24px;
-  height: 24px;
-  margin-right: 8px;
+  width: 28px;
+  height: 28px;
+  margin-right: 10px;
   color: var(--secondary);
 }
 
 .formations {
-  display: flex;
-  gap: 15px;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
 }
 
 .formation-card {
-  flex: 1;
-  min-width: 200px;
   background-color: #f8fafc;
   border-radius: 12px;
-  padding: 20px;
+  padding: 25px;
   text-align: center;
   border: 1px solid #e2e8f0;
   transition: all 0.3s ease;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
 }
 
 .formation-card:hover {
@@ -187,84 +230,143 @@ body {
   border-color: var(--primary);
 }
 
-.formation-number {
-  font-size: 24px;
-  font-weight: 700;
-  color: var(--primary);
+.formation-rank {
+  display: inline-block;
+  background-color: var(--accent); /* Menggunakan accent (Kuning) */
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 20px;
   margin-bottom: 10px;
 }
 
-.formation-rank {
-  display: inline-block;
-  background-color: var(--accent);
-  color: white;
-  font-size: 12px;
-  font-weight: 600;
-  padding: 4px 10px;
-  border-radius: 20px;
+.formation-number {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--primary);
   margin-bottom: 15px;
 }
 
+/* === Formation Field (FULL FIELD Visualization) === */
 .formation-field {
   width: 100%;
-  height: 120px;
-  background-color: #15803d;
-  border-radius: 8px;
+  height: 250px; /* Tinggi ditingkatkan */
+  background-color: var(--field-bg); /* Hijau Lapangan */
+  border-radius: 10px;
   margin-top: 10px;
   position: relative;
   overflow: hidden;
+  border: 4px solid white; /* Garis tepi luar */
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3);
 }
 
-.formation-field::before,
+/* Garis Tengah */
+.formation-field::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2px;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.9);
+  border-radius: 0; /* Hapus border-radius lama */
+  z-index: 1;
+}
+
+/* Lingkaran Tengah */
 .formation-field::after {
   content: "";
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 5px;
-}
-
-.formation-field::before {
-  width: 80%;
-  height: 80%;
-}
-
-.formation-field::after {
-  width: 20px;
-  height: 20px;
+  width: 60px; 
+  height: 60px;
+  border: 2px solid rgba(255, 255, 255, 0.9);
   border-radius: 50%;
+  z-index: 1;
 }
 
+/* Kotak Penalti Kiri (Harus Ditambahkan sebagai DIV di JS) */
+.formation-field .box-left {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+    width: 20%; 
+    height: 60%;
+    border: 2px solid rgba(255, 255, 255, 0.9);
+    border-left: none; 
+    border-radius: 0 5px 5px 0;
+    box-sizing: border-box;
+    z-index: 1;
+}
+
+/* Gawang Kiri (Harus Ditambahkan sebagai DIV di JS) */
+.formation-field .goal-left {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+    width: 5px;
+    height: 25%;
+    background-color: #333; 
+    z-index: 10;
+}
+
+/* Kotak Penalti Kanan (Harus Ditambahkan sebagai DIV di JS) */
+.formation-field .box-right {
+    content: "";
+    position: absolute;
+    top: 50%;
+    right: 0;
+    transform: translateY(-50%);
+    width: 20%; 
+    height: 60%;
+    border: 2px solid rgba(255, 255, 255, 0.9);
+    border-right: none; 
+    border-radius: 5px 0 0 5px;
+    box-sizing: border-box;
+    z-index: 1;
+}
+
+/* Titik Pemain */
 .player {
   position: absolute;
-  width: 8px;
-  height: 8px;
+  width: 15px;
+  height: 15px;
   background-color: white;
   border-radius: 50%;
+  border: 3px solid var(--dark);
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+  transform: translate(-50%, -50%);
+  transition: all 0.3s;
+  z-index: 20;
 }
 
-.footer {
+.player:hover {
+    transform: translate(-50%, -50%) scale(1.3);
+    border-color: var(--secondary);
+}
+
+/* === Lain-lain & Responsif === */
+.download-section {
+  display: none;
   text-align: center;
-  padding: 20px;
-  color: #64748b;
-  font-size: 14px;
-  border-top: 1px solid #e2e8f0;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px dashed #e2e8f0;
+  display: flex;
+  gap: 15px;
+  width: 100%;
 }
 
-@media (max-width: 768px) {
-  .container {
-    border-radius: 12px;
-  }
-
-  .formations {
-    flex-direction: column;
-  }
-
-  .formation-card {
-    min-width: 100%;
-  }
+.download-section button {
+  flex-grow: 1;
 }
 
 .loading {
@@ -289,74 +391,37 @@ body {
   }
 }
 
-.error {
-  color: #ef4444;
+.footer {
   text-align: center;
-  margin-top: 10px;
+  padding: 20px;
+  color: #64748b;
   font-size: 14px;
-}
-
-.download-section {
-  display: none;
-  text-align: center;
-  margin-top: 20px;
-}
-/* === Navbar === */
-.navbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 15px 30px;
-  background-color: var(--primary);
-  color: white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  position: fixed;
-  top: 0;
-  left: 0;
+  border-top: 1px solid #e2e8f0;
   width: 100%;
-  z-index: 1000;
 }
 
-.navbar-brand h2 {
-  margin: 0;
-  font-size: 20px;
-  font-weight: 700;
-}
-
-.navbar-nav {
-  display: flex;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  gap: 20px;
-}
-
-.nav-link {
-  color: white;
-  text-decoration: none;
-  font-weight: 600;
-  font-size: 15px;
-  padding: 6px 12px;
-  border-radius: 6px;
-  transition: background 0.2s;
-}
-
-.nav-link:hover,
-.nav-link.active {
-  background-color: rgba(255, 255, 255, 0.2);
-}
-
-/* Sesuaikan body agar tidak tertutup navbar */
-body {
-  padding-top: 80px; /* Sesuaikan dengan tinggi navbar */
-}
-
-/* Ganti .header jadi .page-header agar tidak bentrok */
-.page-header {
-  background-color: var(--primary);
-  color: white;
-  padding: 25px 30px;
-  text-align: center;
-  border-radius: 16px 16px 0 0;
-  margin-bottom: 0;
+@media (max-width: 768px) {
+  .container {
+    border-radius: 12px;
+  }
+  .formations {
+    flex-direction: column;
+  }
+  .formation-card {
+    min-width: 100%;
+  }
+  .navbar {
+    padding: 10px 15px;
+  }
+  .navbar-nav {
+    gap: 10px;
+  }
+  .nav-link {
+    font-size: 14px;
+    padding: 6px 10px;
+  }
+  .download-section {
+    flex-direction: column;
+    gap: 10px;
+  }
 }

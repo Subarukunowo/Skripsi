@@ -22,9 +22,9 @@
       <li class="nav-item">
         <a href="{{ url('/about') }}" class="nav-link">Tentang</a>
       </li>
-      <li class="nav-item">
-        <a href="{{ url('/setting') }}" class="nav-link">Pengaturan</a>
-      </li>
+     <li class="nav-item">
+    <a href="{{ url('/settings') }}" class="nav-link">Pengaturan</a>
+</li>
     </ul>
   </nav>
 
@@ -82,7 +82,8 @@
     </div>
   </div>
 
-  <script>
+ <script>
+    // --- Variabel DOM ---
     const fileInput = document.getElementById('fileInput');
     const fileName = document.getElementById('fileName');
     const processBtn = document.getElementById('processBtn');
@@ -95,7 +96,9 @@
     const downloadPDFBtn = document.getElementById('downloadPDFBtn');
     const downloadExcelBtn = document.getElementById('downloadExcelBtn');
 
-    // Drag & drop
+    // --- 1. Fungsi Drag & Drop dan Update UI ---
+    
+    // Mencegah perilaku default browser saat drag/drop
     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
       dropArea.addEventListener(eventName, e => {
         e.preventDefault();
@@ -103,16 +106,12 @@
       });
     });
 
-    ['dragenter', 'dragover'].forEach(() => {
-      dropArea.addEventListener('dragenter', highlight);
-      dropArea.addEventListener('dragover', highlight);
-    });
-
-    ['dragleave', 'drop'].forEach(() => {
-      dropArea.addEventListener('dragleave', unhighlight);
-      dropArea.addEventListener('drop', handleDrop);
-    });
-
+    // Efek visual saat file di-drag
+    dropArea.addEventListener('dragenter', highlight);
+    dropArea.addEventListener('dragover', highlight);
+    dropArea.addEventListener('dragleave', unhighlight);
+    dropArea.addEventListener('drop', handleDrop);
+    
     function highlight() {
       dropArea.style.borderColor = '#0ea5e9';
       dropArea.style.backgroundColor = 'rgba(14, 165, 233, 0.1)';
@@ -124,11 +123,14 @@
     }
 
     function handleDrop(e) {
+      unhighlight();
       const dt = e.dataTransfer;
       const file = dt.files[0];
       if (file && (file.name.endsWith('.csv') || file.name.endsWith('.xlsx'))) {
         fileInput.files = dt.files;
         updateUI(file);
+      } else {
+        errorDiv.textContent = '❌ Format file tidak didukung. Gunakan CSV atau XLSX.';
       }
     }
 
@@ -142,13 +144,16 @@
         fileName.style.display = 'block';
         processBtn.disabled = false;
         errorDiv.textContent = '';
+        // Sembunyikan hasil lama saat file baru diunggah
+        outputContainer.style.display = 'none';
+        downloadSection.style.display = 'none';
       } else {
         fileName.style.display = 'none';
         processBtn.disabled = true;
       }
     }
-
-    // Proses via AJAX ke Laravel
+    
+    // --- 2. Proses Analisis (AJAX) ---
     processBtn.addEventListener('click', () => {
       const file = fileInput.files[0];
       if (!file) {
@@ -158,6 +163,7 @@
 
       const formData = new FormData();
       formData.append('file', file);
+      // Mengambil token CSRF dari meta tag
       formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
 
       errorDiv.textContent = '';
@@ -169,19 +175,26 @@
         method: 'POST',
         body: formData
       })
-      .then(response => response.json())
+      .then(response => {
+        if (!response.ok) {
+            // Tangani error HTTP seperti 500
+            throw new Error(`HTTP Error! Status: ${response.status}`);
+        }
+        return response.json();
+      })
       .then(data => {
         if (data.success) {
           renderResults(data.recommendations);
           outputContainer.style.display = 'block';
-          downloadSection.style.display = 'block';
+          downloadSection.style.display = 'flex'; // Gunakan flex agar tombol berdampingan
         } else {
+          // Tangani error dari sisi Laravel (misal: data tidak valid)
           errorDiv.textContent = '❌ ' + data.message;
         }
       })
       .catch(err => {
-        console.error(err);
-        errorDiv.textContent = '❌ Terjadi kesalahan saat memproses file.';
+        console.error('Fetch Error:', err);
+        errorDiv.textContent = '❌ Terjadi kesalahan saat memproses file. Periksa konsol.';
       })
       .finally(() => {
         loading.style.display = 'none';
@@ -199,92 +212,128 @@
           <div class="formation-field" id="field-${i}"></div>
         `;
         formationsContainer.appendChild(card);
+        // Tunda visualisasi sebentar agar elemen DOM ter-render
         setTimeout(() => visualizeFormation(item.formasi, `field-${i}`), 50);
       });
     }
 
-    function visualizeFormation(formation, fieldId) {
-      const field = document.getElementById(fieldId);
-      if (!field) return;
-
-      const parts = formation.split('-').map(Number);
-      addPlayer(field, 50, 90); // GK
-
-      const totalLines = parts.length;
-      parts.forEach((count, lineIdx) => {
-        const y = 75 - (lineIdx + 1) * (60 / (totalLines + 1));
-        for (let i = 0; i < count; i++) {
-          const x = 10 + (i + 1) * (80 / (count + 1));
-          addPlayer(field, x, y);
-        }
-      });
-    }
-
+    // --- 3. Visualisasi Formasi (Lapang Penuh) ---
+    
+    // Fungsi pembantu untuk menempatkan pemain
     function addPlayer(field, x, y) {
       const p = document.createElement('div');
       p.className = 'player';
+      // Posisi diukur dari kiri (x) dan atas (y)
       p.style.left = `${x}%`;
       p.style.top = `${y}%`;
       field.appendChild(p);
     }
+    
+    function visualizeFormation(formation, fieldId) {
+        const field = document.getElementById(fieldId);
+        if (!field) return;
+        
+        // Hapus pemain lama dan tambahkan elemen lapangan baru
+        field.innerHTML = ''; 
+        
+        // Tambahkan elemen visual lapangan (sesuai CSS: Kiri, Tengah, Kanan)
+        
+        // 1. Kotak Penalti Kiri (Sisi Gawang Kita)
+        const boxLeft = document.createElement('div');
+        boxLeft.className = 'box-left';
+        field.appendChild(boxLeft);
+    
+        // 2. Gawang Kiri
+        const goalLeft = document.createElement('div');
+        goalLeft.className = 'goal-left';
+        field.appendChild(goalLeft);
+
+        // 3. Kotak Penalti Kanan (Sisi Gawang Lawan)
+        const boxRight = document.createElement('div');
+        boxRight.className = 'box-right';
+        field.appendChild(boxRight);
+
+
+        const parts = formation.split('-').map(Number);
+        
+        // 1. Tambahkan GK (Posisi x: 5% dari kiri/gawang kita, y: 50% di tengah)
+        addPlayer(field, 5, 50); 
+    
+        const totalLines = parts.length;
+        
+        // Posisi X (Kedalaman Lapangan, 0-100%). Pemain non-GK 
+        // akan ditempatkan antara 20% (Bek) dan 90% (Striker)
+        
+        parts.forEach((count, lineIdx) => {
+            // Skala Vertikal (X-axis): Membuat jarak antar baris sama
+            // lineIdx = 0 (Defense), lineIdx = 1 (Midfield), dst.
+            const lineStart = 20; 
+            const totalDistance = 70; // Jarak dari 20% ke 90%
+            const lineGap = totalDistance / (totalLines);
+            // xPos = 20% + (Jarak yang ditempuh)
+            const xPos = lineStart + (lineIdx * lineGap) + (lineGap / 2); // Tambah offset agar pas di tengah zona
+
+            for (let i = 0; i < count; i++) {
+                // Skala Horizontal (Y-axis): Menyebar dari 10% hingga 90% (lebar lapangan)
+                const yPos = 10 + (i + 1) * (80 / (count + 1));
+                
+                addPlayer(field, xPos, yPos); 
+            }
+        });
+    }
+
+    // --- 4. Fungsi Download (PDF dan Excel) ---
+
+    // Fungsi unduh umum
+    function handleDownload(route, filename, errorMessage) {
+        fetch(route, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({}),
+        })
+        .then(response => {
+            if (!response.ok) {
+                // Tangani error HTTP
+                return response.json().then(errorData => {
+                    throw new Error(errorData.message || errorMessage);
+                });
+            }
+            return response.blob();
+        })
+        .then(blob => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+        })
+        .catch(err => {
+            console.error(err);
+            alert(err.message);
+        });
+    }
 
     downloadPDFBtn.addEventListener('click', () => {
-      fetch("{{ route('formation.download.pdf') }}", {
-        method: 'POST',
-        headers: {
-          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-        },
-        body: JSON.stringify({}),
-      })
-      .then(response => {
-        if (response.ok) {
-          return response.blob();
-        }
-        throw new Error('Gagal mengunduh PDF.');
-      })
-      .then(blob => {
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'laporan-formasi-sepak-bola.pdf';
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-      })
-      .catch(err => {
-        console.error(err);
-        alert('Terjadi kesalahan saat mengunduh PDF.');
-      });
+        handleDownload(
+            "{{ route('formation.download.pdf') }}", 
+            'laporan-formasi-sepak-bola.pdf', 
+            'Gagal mengunduh PDF.'
+        );
     });
 
     downloadExcelBtn.addEventListener('click', () => {
-      fetch("{{ route('formation.download.excel') }}", {
-        method: 'POST',
-        headers: {
-          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-        },
-        body: JSON.stringify({}),
-      })
-      .then(response => {
-        if (response.ok) {
-          return response.blob();
-        }
-        throw new Error('Gagal mengunduh Excel.');
-      })
-      .then(blob => {
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'laporan-formasi-sepak-bola.xlsx';
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-      })
-      .catch(err => {
-        console.error(err);
-        alert('Terjadi kesalahan saat mengunduh Excel.');
-      });
+        handleDownload(
+            "{{ route('formation.download.excel') }}", 
+            'laporan-formasi-sepak-bola.xlsx', 
+            'Gagal mengunduh Excel.'
+        );
     });
-  </script>
+</script>
 </body>
 </html>
