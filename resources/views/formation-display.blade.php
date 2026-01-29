@@ -1,10 +1,10 @@
-TYPE html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rekomendasi Formasi Tim</title>
-    <link rel="stylesheet" href="formations-display.css">
+    <link rel="stylesheet" href="{{ asset('css/formations-display.css') }}">
 </head>
 <body>
     <div class="container">
@@ -14,103 +14,95 @@ TYPE html>
         </header>
 
         <div class="formations-grid">
-            <!-- Formasi 3-4-3 -->
+            @foreach($recommendations as $index => $rec)
             <div class="formation-card">
                 <div class="formation-header">
-                    <h2 class="formation-name">3-4-3</h2>
-                    <span class="recommendation-badge">Rekomendasi #1</span>
+                    <h2 class="formation-name">{{ $rec['formasi'] }}</h2>
+                    <span class="recommendation-badge {{ $index === 0 ? '' : ($index === 1 ? 'badge-secondary' : 'badge-tertiary') }}">
+                        Rekomendasi #{{ $index + 1 }} ({{ number_format($rec['prob'] * 100, 1) }}%)
+                    </span>
                 </div>
+                
                 <div class="field">
                     <!-- Goalkeeper -->
-                    <div class="player" style="top: 85%; left: 50%;"></div>
-                    
-                    <!-- Defenders (3) -->
-                    <div class="player" style="top: 68%; left: 25%;"></div>
-                    <div class="player" style="top: 68%; left: 50%;"></div>
-                    <div class="player" style="top: 68%; left: 75%;"></div>
-                    
-                    <!-- Midfielders (4) -->
-                    <div class="player" style="top: 45%; left: 17%;"></div>
-                    <div class="player" style="top: 45%; left: 40%;"></div>
-                    <div class="player" style="top: 45%; left: 60%;"></div>
-                    <div class="player" style="top: 45%; left: 83%;"></div>
-                    
-                    <!-- Forwards (3) -->
-                    <div class="player" style="top: 20%; left: 25%;"></div>
-                    <div class="player" style="top: 20%; left: 50%;"></div>
-                    <div class="player" style="top: 20%; left: 75%;"></div>
-                </div>
-                <div class="formation-description">
-                    <h3>Mengapa Formasi Ini?</h3>
-                    <p>Formasi 3-4-3 sangat cocok untuk tim dengan kekuatan menyerang tinggi. Dengan 3 striker, tim Anda dapat memberikan tekanan konstan ke lini pertahanan lawan. 4 gelandang memberikan fleksibilitas untuk mengontrol tengah lapangan dan mendukung serangan sayap.</p>
-                </div>
-            </div>
+                    @php
+                        $gk = collect($startingXI)->first(fn($p) => $p['Position'] === 'GK');
+                    @endphp
+                    @if($gk)
+                        <div class="player-container" style="top: 85%; left: 50%;">
+                            <div class="player"></div>
+                            <div class="player-name">{{ $gk['name'] }}</div>
+                        </div>
+                    @endif
 
-            <!-- Formasi 4-3-3 -->
-            <div class="formation-card">
-                <div class="formation-header">
-                    <h2 class="formation-name">4-3-3</h2>
-                    <span class="recommendation-badge badge-secondary">Rekomendasi #2</span>
-                </div>
-                <div class="field">
-                    <!-- Goalkeeper -->
-                    <div class="player" style="top: 85%; left: 50%;"></div>
-                    
-                    <!-- Defenders (4) -->
-                    <div class="player" style="top: 68%; left: 17%;"></div>
-                    <div class="player" style="top: 68%; left: 40%;"></div>
-                    <div class="player" style="top: 68%; left: 60%;"></div>
-                    <div class="player" style="top: 68%; left: 83%;"></div>
-                    
-                    <!-- Midfielders (3) -->
-                    <div class="player" style="top: 45%; left: 30%;"></div>
-                    <div class="player" style="top: 45%; left: 50%;"></div>
-                    <div class="player" style="top: 45%; left: 70%;"></div>
-                    
-                    <!-- Forwards (3) -->
-                    <div class="player" style="top: 20%; left: 25%;"></div>
-                    <div class="player" style="top: 20%; left: 50%;"></div>
-                    <div class="player" style="top: 20%; left: 75%;"></div>
-                </div>
-                <div class="formation-description">
-                    <h3>Mengapa Formasi Ini?</h3>
-                    <p>Formasi 4-3-3 adalah pilihan seimbang yang memberikan stabilitas defensif dengan 4 bek. 3 gelandang menciptakan kontrol di tengah lapangan, sementara 3 penyerang memberikan ancaman di lini depan. Ideal untuk tim yang membutuhkan keseimbangan antara bertahan dan menyerang.</p>
-                </div>
-            </div>
+                    <!-- Outfield players -->
+                    @php
+                        $outfield = collect($startingXI)->filter(fn($p) => $p['Position'] !== 'GK');
+                        $parts = explode('-', $rec['formasi']);
+                        $lines = [];
+                        
+                        // Kelompokkan pemain berdasarkan posisi
+                        foreach ($outfield as $player) {
+                            $pos = $player['Position'];
+                            if (in_array($pos, ['CB','LB','RB','LWB','RWB'])) {
+                                $lines[count($parts)-2][] = $player;
+                            } elseif (in_array($pos, ['CM','CDM','CAM','LM','RM','LW','RW'])) {
+                                $lines[count($parts)-3][] = $player;
+                            } else {
+                                $lines[0][] = $player; // Striker
+                            }
+                        }
+                    @endphp
 
-            <!-- Formasi 4-2-3-1 -->
-            <div class="formation-card">
-                <div class="formation-header">
-                    <h2 class="formation-name">4-2-3-1</h2>
-                    <span class="recommendation-badge badge-tertiary">Rekomendasi #3</span>
+                    @for($i = 0; $i < count($parts); $i++)
+                        @php
+                            $lineIndex = count($parts) - 1 - $i;
+                            $playersInLine = $lines[$i] ?? [];
+                            $count = count($playersInLine);
+                        @endphp
+                        @foreach($playersInLine as $j => $player)
+                            @php
+                                $top = 85 - ($i + 1) * 15;
+                                $left = 20 + ($j) * (60 / max(1, $count - 1));
+                                if ($count == 1) $left = 50;
+                            @endphp
+                            <div class="player-container"style="top: {{ $top }}%; left: {{ $left }}%;">
+                                <div class="player"></div>
+                                <div class="player-name">{{ $player['name'] }}</div>
+                            </div>
+                        @endforeach
+                    @endfor
                 </div>
-                <div class="field">
-                    <!-- Goalkeeper -->
-                    <div class="player" style="top: 85%; left: 50%;"></div>
-                    
-                    <!-- Defenders (4) -->
-                    <div class="player" style="top: 68%; left: 17%;"></div>
-                    <div class="player" style="top: 68%; left: 40%;"></div>
-                    <div class="player" style="top: 68%; left: 60%;"></div>
-                    <div class="player" style="top: 68%; left: 83%;"></div>
-                    
-                    <!-- Defensive Midfielders (2) -->
-                    <div class="player" style="top: 52%; left: 38%;"></div>
-                    <div class="player" style="top: 52%; left: 62%;"></div>
-                    
-                    <!-- Attacking Midfielders (3) -->
-                    <div class="player" style="top: 33%; left: 25%;"></div>
-                    <div class="player" style="top: 33%; left: 50%;"></div>
-                    <div class="player" style="top: 33%; left: 75%;"></div>
-                    
-                    <!-- Forward (1) -->
-                    <div class="player" style="top: 15%; left: 50%;"></div>
-                </div>
+
                 <div class="formation-description">
-                    <h3>Mengapa Formasi Ini?</h3>
-                    <p>Formasi 4-2-3-1 sangat efektif untuk tim yang ingin mengontrol permainan. 2 gelandang bertahan memberikan perlindungan ekstra untuk pertahanan, sementara 3 gelandang serang dan 1 striker murni menciptakan peluang kreatif. Cocok untuk tim dengan pemain teknis yang bagus.</p>
+                    <h3>Starting XI</h3>
+                    <div class="player-list">
+                        @foreach($startingXI as $player)
+                        <div class="player-item">
+                            <span class="player-pos-badge">{{ $player['Position'] }}</span>
+                            <span class="player-full-name">{{ $player['name'] }}</span>
+                            <span class="player-overall">OVR: {{ number_format($player['overall'], 1) }}</span>
+                        </div>
+                        @endforeach
+                    </div>
                 </div>
+
+                @if(!empty($substitutes))
+                <div class="substitutes-section">
+                    <h3>Pemain Cadangan</h3>
+                    <div class="player-list">
+                        @foreach($substitutes as $sub)
+                        <div class="player-item">
+                            <span class="player-pos-badge">{{ $sub['Position'] }}</span>
+                            <span class="player-full-name">{{ $sub['name'] }}</span>
+                            <span class="player-overall">OVR: {{ number_format($sub['overall'], 1) }}</span>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+                @endif
             </div>
+            @endforeach
         </div>
 
         <footer class="footer">

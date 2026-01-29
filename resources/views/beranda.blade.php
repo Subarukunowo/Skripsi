@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="csrf-token" content="{{ csrf_token() }}">
+  <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com; object-src 'none';">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Klasifikasi Formasi Sepak Bola</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -66,7 +67,40 @@
           <!-- Hasil dari Laravel akan dimasukkan di sini -->
         </div>
       </div>
+<!-- STARTING XI -->
+<div id="startingXISection" style="display: none; margin-top: 20px;">
+    <h3 style="text-align: center; color: #0ea5e9; margin-bottom: 15px;">Starting XI</h3>
+    <div class="player-grid" id="startingXIGrid">
+        <!-- Kartu pemain akan dimasukkan di sini -->
+    </div>
+</div>
 
+<!-- CADANGAN -->
+<div id="substitutesSection" style="display: none; margin-top: 20px;">
+    <h3 style="text-align: center; color: #f59e0b; margin-bottom: 15px;">Pemain Cadangan</h3>
+    <div class="player-grid" id="substitutesGrid">
+        <!-- Kartu pemain akan dimasukkan di sini -->
+    </div>
+</div>
+<!-- SUBSTITUTES SECTION -->
+<div id="substitutesSection" style="display: none; margin-top: 20px;">
+    <h3 style="text-align: center; color: #f59e0b; margin-bottom: 15px;">Pemain Cadangan</h3>
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+            <thead>
+                <tr style="background-color: #f59e0b; color: white;">
+                    <th style="padding: 12px; text-align: left;">#</th>
+                    <th style="padding: 12px; text-align: left;">Nama Pemain</th>
+                    <th style="padding: 12px; text-align: left;">Posisi</th>
+                    <th style="padding: 12px; text-align: left;">OVR</th>
+                </tr>
+            </thead>
+            <tbody id="substitutesTable">
+                <!-- Data akan diisi oleh JavaScript -->
+            </tbody>
+        </table>
+    </div>
+</div>
       <div class="download-section" id="downloadSection">
         <button id="downloadPDFBtn" class="process-btn" style="background: linear-gradient(135deg, #8b5cf6, #ec4899);">
           Unduh Laporan PDF
@@ -82,7 +116,7 @@
     </div>
   </div>
 
- <script>
+<script>
     // --- Variabel DOM ---
     const fileInput = document.getElementById('fileInput');
     const fileName = document.getElementById('fileName');
@@ -96,9 +130,7 @@
     const downloadPDFBtn = document.getElementById('downloadPDFBtn');
     const downloadExcelBtn = document.getElementById('downloadExcelBtn');
 
-    // --- 1. Fungsi Drag & Drop dan Update UI ---
-    
-    // Mencegah perilaku default browser saat drag/drop
+    // --- 1. Fungsi Drag & Drop dan Update UI (Tetap Sama) ---
     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
       dropArea.addEventListener(eventName, e => {
         e.preventDefault();
@@ -106,37 +138,17 @@
       });
     });
 
-    // Efek visual saat file di-drag
-    dropArea.addEventListener('dragenter', highlight);
-    dropArea.addEventListener('dragover', highlight);
-    dropArea.addEventListener('dragleave', unhighlight);
-    dropArea.addEventListener('drop', handleDrop);
-    
-    function highlight() {
-      dropArea.style.borderColor = '#0ea5e9';
-      dropArea.style.backgroundColor = 'rgba(14, 165, 233, 0.1)';
-    }
-
-    function unhighlight() {
-      dropArea.style.borderColor = '#cbd5e1';
-      dropArea.style.backgroundColor = '';
-    }
-
-    function handleDrop(e) {
-      unhighlight();
-      const dt = e.dataTransfer;
-      const file = dt.files[0];
+    dropArea.addEventListener('dragenter', () => { dropArea.style.borderColor = '#0ea5e9'; dropArea.style.backgroundColor = 'rgba(14, 165, 233, 0.1)'; });
+    dropArea.addEventListener('dragleave', () => { dropArea.style.borderColor = '#cbd5e1'; dropArea.style.backgroundColor = ''; });
+    dropArea.addEventListener('drop', (e) => {
+      const file = e.dataTransfer.files[0];
       if (file && (file.name.endsWith('.csv') || file.name.endsWith('.xlsx'))) {
-        fileInput.files = dt.files;
+        fileInput.files = e.dataTransfer.files;
         updateUI(file);
-      } else {
-        errorDiv.textContent = '❌ Format file tidak didukung. Gunakan CSV atau XLSX.';
       }
-    }
-
-    fileInput.addEventListener('change', (e) => {
-      updateUI(e.target.files[0]);
     });
+
+    fileInput.addEventListener('change', (e) => updateUI(e.target.files[0]));
 
     function updateUI(file) {
       if (file) {
@@ -144,147 +156,215 @@
         fileName.style.display = 'block';
         processBtn.disabled = false;
         errorDiv.textContent = '';
-        // Sembunyikan hasil lama saat file baru diunggah
-        outputContainer.style.display = 'none';
-        downloadSection.style.display = 'none';
-      } else {
-        fileName.style.display = 'none';
-        processBtn.disabled = true;
       }
     }
-    
-    // --- 2. Proses Analisis (AJAX) ---
+
+    // --- 2. Proses Analisis ---
     processBtn.addEventListener('click', () => {
       const file = fileInput.files[0];
-      if (!file) {
-        errorDiv.textContent = 'Pilih file terlebih dahulu.';
-        return;
-      }
-
       const formData = new FormData();
       formData.append('file', file);
-      // Mengambil token CSRF dari meta tag
       formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
 
-      errorDiv.textContent = '';
       loading.style.display = 'block';
       outputContainer.style.display = 'none';
-      downloadSection.style.display = 'none';
 
-      fetch("{{ route('formation.analyze') }}", {
-        method: 'POST',
-        body: formData
-      })
-      .then(response => {
-        if (!response.ok) {
-            // Tangani error HTTP seperti 500
-            throw new Error(`HTTP Error! Status: ${response.status}`);
-        }
-        return response.json();
-      })
-      .then(data => {
-        if (data.success) {
-          renderResults(data.recommendations);
-          outputContainer.style.display = 'block';
-          downloadSection.style.display = 'flex'; // Gunakan flex agar tombol berdampingan
-        } else {
-          // Tangani error dari sisi Laravel (misal: data tidak valid)
-          errorDiv.textContent = '❌ ' + data.message;
-        }
-      })
-      .catch(err => {
-        console.error('Fetch Error:', err);
-        errorDiv.textContent = '❌ Terjadi kesalahan saat memproses file. Periksa konsol.';
-      })
-      .finally(() => {
-        loading.style.display = 'none';
-      });
+     fetch("{{ route('formation.analyze') }}", {
+  method: 'POST',
+  headers: {
+    'Accept': 'application/json',
+    'X-CSRF-TOKEN': document
+      .querySelector('meta[name="csrf-token"]')
+      .getAttribute('content')
+  },
+  body: formData
+})
+.then(async response => {
+  if (!response.ok) {
+    const text = await response.text(); // untuk debug
+    throw new Error(text);
+  }
+  return response.json();
+})
+.then(data => {
+  if (data.success) {
+    renderResults(data);
+    outputContainer.style.display = 'block';
+    downloadSection.style.display = 'flex';
+  } else {
+    errorDiv.textContent = '❌ ' + data.message;
+  }
+})
+.catch(err => {
+  console.error('SERVER ERROR:', err);
+  errorDiv.textContent = '❌ Gagal memproses data (cek Network → Response)';
+})
+.finally(() => {
+  loading.style.display = 'none';
+});
     });
 
-    function renderResults(results) {
-      formationsContainer.innerHTML = '';
-      results.forEach((item, i) => {
+    // --- 3. Render Hasil (Sinkronisasi dengan CSS) ---
+   function renderResults(data) {
+    // 1. Validasi awal data
+    if (!data.recommendations || data.recommendations.length === 0) {
+        console.error("DEBUG: data.recommendations tidak ditemukan atau kosong!");
+        return;
+    }
+
+    formationsContainer.innerHTML = '';
+    const recommendations = data.recommendations;
+    const players = data.startingXI || [];
+
+    recommendations.forEach((rec, i) => {
         const card = document.createElement('div');
         card.className = 'formation-card';
+        const fieldId = `field-${i}`;
+        
+        // 2. Render HTML Kartu
         card.innerHTML = `
-          <div class="formation-number">${item.formasi}</div>
-          <div class="formation-rank">Rekomendasi #${i + 1}</div>
-          <div class="formation-field" id="field-${i}"></div>
+            <div class="formation-number">${rec.formasi}</div>
+            <div class="formation-rank">Rekomendasi #${i + 1}</div>
+            <div style="margin-bottom: 10px; font-size: 12px; color: #64748b;">
+            </div>
+            <div class="formation-field" id="${fieldId}" style="position: relative; overflow: hidden;">
+                <div class="box-left"></div>
+                <div class="goal-left"></div>
+                <div class="box-right"></div>
+                </div>
         `;
         formationsContainer.appendChild(card);
-        // Tunda visualisasi sebentar agar elemen DOM ter-render
-        setTimeout(() => visualizeFormation(item.formasi, `field-${i}`), 50);
-      });
-    }
 
-    // --- 3. Visualisasi Formasi (Lapang Penuh) ---
-    
-    // Fungsi pembantu untuk menempatkan pemain
-    function addPlayer(field, x, y) {
-      const p = document.createElement('div');
-      p.className = 'player';
-      // Posisi diukur dari kiri (x) dan atas (y)
-      p.style.left = `${x}%`;
-      p.style.top = `${y}%`;
-      field.appendChild(p);
-    }
-    
-    function visualizeFormation(formation, fieldId) {
-        const field = document.getElementById(fieldId);
-        if (!field) return;
-        
-        // Hapus pemain lama dan tambahkan elemen lapangan baru
-        field.innerHTML = ''; 
-        
-        // Tambahkan elemen visual lapangan (sesuai CSS: Kiri, Tengah, Kanan)
-        
-        // 1. Kotak Penalti Kiri (Sisi Gawang Kita)
-        const boxLeft = document.createElement('div');
-        boxLeft.className = 'box-left';
-        field.appendChild(boxLeft);
-    
-        // 2. Gawang Kiri
-        const goalLeft = document.createElement('div');
-        goalLeft.className = 'goal-left';
-        field.appendChild(goalLeft);
-
-        // 3. Kotak Penalti Kanan (Sisi Gawang Lawan)
-        const boxRight = document.createElement('div');
-        boxRight.className = 'box-right';
-        field.appendChild(boxRight);
-
-
-        const parts = formation.split('-').map(Number);
-        
-        // 1. Tambahkan GK (Posisi x: 5% dari kiri/gawang kita, y: 50% di tengah)
-        addPlayer(field, 5, 50); 
-    
-        const totalLines = parts.length;
-        
-        // Posisi X (Kedalaman Lapangan, 0-100%). Pemain non-GK 
-        // akan ditempatkan antara 20% (Bek) dan 90% (Striker)
-        
-        parts.forEach((count, lineIdx) => {
-            // Skala Vertikal (X-axis): Membuat jarak antar baris sama
-            // lineIdx = 0 (Defense), lineIdx = 1 (Midfield), dst.
-            const lineStart = 20; 
-            const totalDistance = 70; // Jarak dari 20% ke 90%
-            const lineGap = totalDistance / (totalLines);
-            // xPos = 20% + (Jarak yang ditempuh)
-            const xPos = lineStart + (lineIdx * lineGap) + (lineGap / 2); // Tambah offset agar pas di tengah zona
-
-            for (let i = 0; i < count; i++) {
-                // Skala Horizontal (Y-axis): Menyebar dari 10% hingga 90% (lebar lapangan)
-                const yPos = 10 + (i + 1) * (80 / (count + 1));
-                
-                addPlayer(field, xPos, yPos); 
+        // 3. Jalankan visualisasi (PENTING: Masukkan rec.formasi sebagai argumen kedua)
+        setTimeout(() => {
+            if (typeof visualizePlayers === "function") {
+                // Kita kirim: ID Lapangan, String Formasi (ex: '4-2-3-1'), dan Array 11 Pemain
+                visualizePlayers(fieldId, rec.formasi, players);
+            } else {
+                console.error("Fungsi visualizePlayers belum didefinisikan!");
             }
-        });
+        }, 100);
+    });
+
+    // 4. Update Tabel Cadangan
+    if (data.substitutes && data.substitutes.length > 0) {
+        const subTable = document.getElementById('substitutesTable');
+        const subSection = document.getElementById('substitutesSection');
+        if(subTable) {
+            subTable.innerHTML = data.substitutes.map((s, idx) => {
+                // Hitung OVR secara dinamis jika key 'Overall' tidak ada di JSON
+                const ovr = s.Overall || ((s.pace + s.shooting + s.passing + s.dribbling + s.defending + s.physical) / 6).toFixed(1);
+                return `
+                    <tr>
+                        <td style="padding: 10px; border-bottom: 1px solid #eee;">${idx+1}</td>
+                        <td style="padding: 10px; border-bottom: 1px solid #eee;">${s.name}</td>
+                        <td style="padding: 10px; border-bottom: 1px solid #eee;">${s.Position}</td>
+                        <td style="padding: 10px; border-bottom: 1px solid #eee; font-weight: bold;">${ovr}</td>
+                    </tr>
+                `;
+            }).join('');
+            subSection.style.display = 'block';
+        }
+    }
+}
+
+ function visualizePlayers(fieldId, formation, players) {
+    const field = document.getElementById(fieldId);
+    if (!field || !players || players.length === 0) return;
+
+    field.querySelectorAll('.player-wrapper').forEach(w => w.remove());
+
+    const lines = formation.split('-').map(Number);
+    const outfieldPlayers = players.filter(p => p.Position !== 'GK');
+    
+    // 1. Tempatkan Kiper (GK) - Pastikan Y = 50% agar di tengah gawang
+    const gk = players.find(p => p.Position === 'GK');
+    if (gk) {
+        addPlayerToField(field, gk, 8, 50); 
     }
 
-    // --- 4. Fungsi Download (PDF dan Excel) ---
+    let playerCounter = 0;
+    const xStart = 25;
+    const xEnd = 85;
+    const xStep = (xEnd - xStart) / (lines.length - 1 || 1);
 
-    // Fungsi unduh umum
+    lines.forEach((count, lineIdx) => {
+        const xPos = xStart + (lineIdx * xStep);
+        
+        for (let i = 0; i < count; i++) {
+            if (outfieldPlayers[playerCounter]) {
+                // LOGIKA PERBAIKAN: 
+                // Jika hanya ada 1 pemain di baris tersebut (seperti ST tunggal), 
+                // paksa posisinya ke 50%.
+                let yPos;
+                if (count === 1) {
+                    yPos = 50; 
+                } else {
+                    // Distribusi merata untuk lebih dari 1 pemain
+                    yPos = (100 / (count + 1)) * (i + 1);
+                }
+                
+                addPlayerToField(field, outfieldPlayers[playerCounter], xPos, yPos);
+                playerCounter++;
+            }
+        }
+    });
+}
+
+function addPlayerToField(field, player, x, y) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'player-wrapper';
+    
+    // Gunakan gaya inline untuk memastikan posisi presisi di atas lapangan hijau
+    Object.assign(wrapper.style, {
+        left: `${x}%`,
+        top: `${y}%`,
+        position: 'absolute',
+        transform: 'translate(-50%, -50%)',
+        textAlign: 'center',
+        zIndex: '10'
+    });
+
+    wrapper.innerHTML = `
+        <div class="player" style="
+            width: 14px; 
+            height: 14px; 
+            background: white; 
+            border: 2px solid #0ea5e9; 
+            border-radius: 50%; 
+            margin: 0 auto 4px;">
+        </div>
+        <div class="player-name" style="
+            font-size: 10px; 
+            color: white; 
+            font-weight: 500;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+            white-space: nowrap;">
+            ${player.name.split(' ').pop()}
+        </div>
+    `;
+    field.appendChild(wrapper);
+}
+
+// Fungsi pembantu untuk membuat elemen DOM pemain
+function addPlayerToField(field, player, x, y) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'player-wrapper';
+    wrapper.style.left = x + '%';
+    wrapper.style.top = y + '%';
+    wrapper.style.position = 'absolute';
+    wrapper.style.transform = 'translate(-50%, -50%)';
+
+    wrapper.innerHTML = `
+        <div class="player" style="background: white; border: 2px solid #0ea5e9; width: 12px; height: 12px; border-radius: 50%; margin: 0 auto;"></div>
+        <div class="player-name" style="font-size: 10px; color: white; text-shadow: 1px 1px 2px black; white-space: nowrap; margin-top: 2px;">
+            ${player.name.split(' ').pop()} 
+        </div>
+    `;
+    field.appendChild(wrapper);
+}
+
+    // --- 4. Fungsi Download (Tetap Sama) ---
     function handleDownload(route, filename, errorMessage) {
         fetch(route, {
             method: 'POST',
@@ -294,46 +374,19 @@
             },
             body: JSON.stringify({}),
         })
-        .then(response => {
-            if (!response.ok) {
-                // Tangani error HTTP
-                return response.json().then(errorData => {
-                    throw new Error(errorData.message || errorMessage);
-                });
-            }
-            return response.blob();
-        })
+        .then(response => response.blob())
         .then(blob => {
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
             a.download = filename;
-            document.body.appendChild(a);
             a.click();
-            a.remove();
-            window.URL.revokeObjectURL(url);
         })
-        .catch(err => {
-            console.error(err);
-            alert(err.message);
-        });
+        .catch(err => alert(errorMessage));
     }
 
-    downloadPDFBtn.addEventListener('click', () => {
-        handleDownload(
-            "{{ route('formation.download.pdf') }}", 
-            'laporan-formasi-sepak-bola.pdf', 
-            'Gagal mengunduh PDF.'
-        );
-    });
-
-    downloadExcelBtn.addEventListener('click', () => {
-        handleDownload(
-            "{{ route('formation.download.excel') }}", 
-            'laporan-formasi-sepak-bola.xlsx', 
-            'Gagal mengunduh Excel.'
-        );
-    });
+    downloadPDFBtn.addEventListener('click', () => handleDownload("{{ route('formation.download.pdf') }}", 'laporan.pdf', 'Gagal unduh PDF'));
+    downloadExcelBtn.addEventListener('click', () => handleDownload("{{ route('formation.download.excel') }}", 'laporan.xlsx', 'Gagal unduh Excel'));
 </script>
 </body>
 </html>

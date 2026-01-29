@@ -367,6 +367,17 @@ body {
 
 .download-section button {
   flex-grow: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+  color: white;
 }
 
 .loading {
